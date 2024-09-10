@@ -1,0 +1,102 @@
+# Kubernetes Documentation
+
+https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/
+
+<Via Kubeadm>
+
+<Version Skew Policy:
+
+Kubernetes follows a version skew policy where:
+
+- kube-apiserver must not be more than one minor version behind or ahead of the kube-controller-manager kube-scheduler, and cloud controller manager.
+
+- kubelet must not be more than two minor versions older than the kube-apiserver.
+
+- kube-proxy must not be more than one minor version older or newer than the kube-apiserver.
+
+<Determine which version to upgrade to:
+
+sudo apt update
+sudo apt-cache madison kubeadm
+
+#--------------Upgrading control plane nodes--------------#
+
+# Drain the node
+Prepare the node for maintenance by marking it unschedulable and evicting the workloads:
+
+kubectl drain <node-to-drain> --ignore-daemonsets
+
+# Upgrade kubeadm
+
+<!-- replace x in 1.31.x-* with the latest patch version via <sudo apt-cache madison kubeadm> -->
+sudo apt-mark unhold kubeadm && \
+sudo apt-get update && sudo apt-get install -y kubeadm='1.31.x-*' && \
+sudo apt-mark hold kubeadm
+
+# Verify the version
+
+kubeadm version
+
+# This command checks that your cluster can be upgraded, and fetches the versions you can upgrade to. It also shows a table with the component config version states.
+
+sudo kubeadm upgrade plan
+
+# Choose a version to upgrade to
+
+<!-- replace x with the patch version you picked for this upgrade -->
+sudo kubeadm upgrade apply v1.31.x
+
+# Upgrade kubelet and kubectl
+
+<!-- replace x in 1.31.x-* with the latest patch version -->
+sudo apt-mark unhold kubelet kubectl && \
+sudo apt-get update && sudo apt-get install -y kubelet='1.31.x-*' kubectl='1.31.x-*' && \
+sudo apt-mark hold kubelet kubectl
+
+<Restart the kubelet
+
+sudo systemctl daemon-reload
+sudo systemctl restart kubelet
+
+# Uncordon the node
+Bring the node back online by marking it schedulable:
+
+kubectl uncordon <node-to-uncordon>
+
+
+#--------------Upgrading worker nodes--------------#
+
+<!-- Via SSH -->
+
+# Drain the node
+Prepare the node for maintenance by marking it unschedulable and evicting the workloads:
+
+kubectl drain <node-to-drain> --ignore-daemonsets
+
+# Upgrade kubeadm
+
+<!-- replace x in 1.31.x-* with the latest patch version via <sudo apt-cache madison kubeadm> -->
+sudo apt-mark unhold kubeadm && \
+sudo apt-get update && sudo apt-get install -y kubeadm='1.31.x-*' && \
+sudo apt-mark hold kubeadm
+
+# Upgrade the worker node
+
+sudo kubeadm upgrade node
+
+# Upgrade kubelet and kubectl
+
+<!-- replace x in 1.31.x-* with the latest patch version -->
+sudo apt-mark unhold kubelet kubectl && \
+sudo apt-get update && sudo apt-get install -y kubelet='1.31.x-*' kubectl='1.31.x-*' && \
+sudo apt-mark hold kubelet kubectl
+
+<Restart the kubelet
+
+sudo systemctl daemon-reload
+sudo systemctl restart kubelet
+
+# Uncordon the node
+Bring the node back online by marking it schedulable:
+
+kubectl uncordon <node-to-uncordon>

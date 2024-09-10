@@ -1,0 +1,53 @@
+#--------------DaemonSet = ds--------------#
+
+# A DaemonSet ensures that all (or some) Nodes run a copy of a Pod.
+# As nodes are added to the cluster, Pods are added to them. 
+# As nodes are removed from the cluster, those Pods are deleted. 
+# Deleting a DaemonSet will clean up the Pods it created.
+
+# Key Characteristics:
+
+# Runs one pod per node (by default)
+# Automatically scales with cluster size
+# Pods are created and scheduled by the DaemonSet controller
+
+# Some typical uses of a DaemonSet are:
+
+# running a cluster storage daemon on every node
+# running a logs collection daemon on every node
+# running a node monitoring daemon on every node
+
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: logging-daemon
+spec:
+  selector:
+    matchLabels:
+      agent: logging-daemon-agent
+  template:
+    metadata:
+      labels:
+        agent: logging-daemon-agent
+    spec:
+      containers:
+        - name: fluentd-logging-daemon-agent
+          image: logging-agent-image
+          resources:
+            limits:
+              memory: 200Mi
+            requests:
+              cpu: 100m
+              memory: 200Mi
+          # tolerations, nodeSelectors & other pod specs can be adeded.
+
+
+#--------------Essential commands--------------#
+
+# kubectl get ds
+# kubectl describe ds <daemonset-name>
+# kubectl edit daemonset <daemonset-name>
+# kubectl delete ds <daemonset-name>
+# kubectl rollout status ds <daemonset-name>
+# kubectl rollout undo ds <daemonset-name>

@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: my-rs
+  labels:
+    app: myapp
+    tier: fe
+
+spec: #RS Spec
+  template:
+    metadata:
+      name: test-nginx-pod
+      labels:
+        app: nginx
+        tier: fe
+    spec: # Pod Spec
+      containers:
+      - name: test-nginx-container
+        image: nginx
+
+  replicas: 3
+  selector: # Must be included
+    matchLabels:
+      tier: fe
+    

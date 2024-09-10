@@ -1,0 +1,70 @@
+ <Deployment update strategies
+
+<Kubernetes offers two main deployment update strategies:
+a) RollingUpdate (default)
+b) Recreate
+
+a) RollingUpdate:
+
+Updates pods in a rolling fashion, <replacing old pods with new ones gradually.
+Allows you to specify how many pods can be unavailable and how many new pods can be created at once.
+Minimizes downtime and allows for zero-downtime updates if configured correctly.
+
+Key parameters:
+
+<maxUnavailable>: Maximum number of pods that can be unavailable during the update.
+<maxSurge>: Maximum number of pods that can be created over the desired number of pods.
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+
+
+b) Recreate:
+
+<Terminates all existing pods before creating new ones>.
+Results in downtime between the termination of old pods and the creation of new ones.
+Useful when the application doesn't support running multiple versions simultaneously.
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 3
+  strategy:
+    type: Recreate
+
+
+<Commands:
+
+- Updating a deployment:
+kubectl set image deployment/my-app container-name=new-image:tag
+
+- Checking the status of a rollout:
+kubectl rollout status deployment/my-app
+
+- Pausing a rollout:
+kubectl rollout pause deployment/my-app
+
+- Resuming a paused rollout:
+kubectl rollout resume deployment/my-app
+
+- Rolling back to a previous revision:
+kubectl rollout undo deployment/my-app
+
+- Rolling back to a specific revision:
+kubectl rollout undo deployment/my-app --to-revision=2
+
+- Viewing rollout history:
+kubectl rollout history deployment/my-app

@@ -1,0 +1,124 @@
+# Persistent Volume Claims (PVC)
+
+PVCs are requests for storage by a user. They consume PV resources and can request specific sizes and access modes.
+
+<Characteristics:
+
+- Namespaced resources
+- Act as a request for storage
+- Can be used as volume in pod specifications
+
+<Important-Fields:
+
+<accessModes>: Desired access mode (should match or be a subset of the PV's access modes)
+<resources>: Specifies the desired storage size
+<storageClassName>: Name of the StorageClass to use for provisioning
+<selector>: Can be used to select a specific PV based on labels
+
+---
+# 1. Basic PVC - General use
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: basic-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard
+
+ <!-- Simple PVC requesting 5Gi of storage with ReadWriteOnce access mode.
+ Uses the 'standard' storage class, which is often the default in many clusters. -->
+
+---
+# 2. PVC with specific storage class
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: fast-storage-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: fast-ssd
+
+<!-- Requests 10Gi of fast SSD storage.
+Useful when you need to specify performance characteristics of the storage. -->
+
+---
+# 3. PVC for shared access (ReadWriteMany)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: nfs
+
+<!-- Requests 5Gi of storage that can be accessed by multiple nodes simultaneously.
+Uses 'nfs' storage class, suitable for shared file systems. -->
+
+---
+# 4. PVC with selector
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: selective-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 8Gi
+  storageClassName: ""
+  selector:
+    matchLabels:
+      environment: production
+
+<!-- Uses a selector to bind to a specific PV based on labels.
+StorageClassName is set to "" to disable dynamic provisioning.
+Useful when you need to claim a specific pre-provisioned PV. -->
+
+---
+# 5. PVC for block device
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: block-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Block
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: block-storage
+
+<!-- Requests a 10Gi block device.
+Uses volumeMode: Block for applications that need raw block device access. -->
+
+---
+# 6. PVC with expanded capacity
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: expandable-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: expandable-storage
+
+<!-- Requests 20Gi of storage.
+Uses a storage class that allows volume expansion.
+Useful when you anticipate needing to increase the volume size in the future. -->

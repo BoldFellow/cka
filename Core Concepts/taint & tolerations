@@ -1,0 +1,50 @@
+#------------ Taints------------#
+
+There are three taint effects: NoSchedule, PreferNoSchedule, and NoExecute.
+
+NoSchedule:
+# This is the strictest effect. It prevents any pod without a matching toleration from being scheduled on the node.
+
+<kubectl taint nodes node1 "key1=value1:NoSchedule"
+
+referNoSchedule:
+# This is a "soft" version of NoSchedule. 
+# The scheduler will try to avoid placing pods without matching tolerations on this node, but it's not guaranteed.
+# If all untainted nodes are fully occupied, pods without matching tolerations may still be scheduled on node2.
+
+<kubectl taint nodes node2 "key2=value2:PreferNoSchedule"
+
+NoExecute:
+# This effect not only prevents future scheduling of pods without matching tolerations 
+# also evicts any existing pods on the node that don't have matching tolerations.
+
+kubectl taint nodes node3 key3=value3:NoExecute
+
+# View taints on a node
+<kubectl describe node <node-name> | grep Taint
+
+# Remove a taint from a node
+<kubectl taint nodes <node-name> "key:NoSchedule"- # the - removes the taint.
+
+
+#------------ Tolerations------------#
+
+There are two main operators used in tolerations: "Equal" and "Exists".
+
+Equal Operator:
+# Requires that the key, value, and effect match exactly.
+
+Exists Operator:
+# Checks for the existence of the key, regardless of its value.
+
+
+# is added under the sepc
+
+<tolerations:
+      - key: "key-name"
+        operator: "Equal/Exists"
+        value: "value-name"
+        effect: "NoSchedule/PreferNoSchedule/NoExecute">
+
+# to check for tolerations in a deploy
+<kubectl describe deploy <deploy-name> | grep Tolerations

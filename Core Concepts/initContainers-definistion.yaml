@@ -1,0 +1,55 @@
+#--------------Init containers--------------#
+
+# Init containers are specialized containers that run before app containers in a Kubernetes Pod. 
+# They are used to perform initialization logic or setup tasks before the main application containers start.
+# Key characteristics:
+
+# They always run to completion.
+# Each init container must complete successfully before the next one starts.
+# If an init container fails, Kubernetes restarts the Pod repeatedly until the init container succeeds.
+
+#--------------Use Cases--------------#
+
+# a) Setup and initialization:
+
+# Populate a shared volume with data or configuration files.
+# Download required dependencies or assets.
+
+# b) Delay main container startup:
+
+# Wait for a database or other service to be ready before starting the main application.
+
+# c) Register the Pod with a remote service:
+
+# Perform registration or discovery tasks.
+
+# d) Security tasks:
+
+# Fetch secrets or perform security checks before the main container starts.
+
+# e) Migration or schema setup:
+
+# Run database migrations or schema initialization.
+
+# f) Dynamic configuration:
+
+# Generate or modify configuration based on the environment.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app.kubernetes.io/name: MyApp
+spec:
+  containers:
+  - name: myapp-container
+    image: busybox:1.28
+    command: ['sh', '-c', 'echo The app is running! && sleep 3600']
+  initContainers:
+  - name: init-myservice
+    image: busybox:1.28
+    command: ['sh', '-c', "until nslookup myservice.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for myservice; sleep 2; done"]
+  - name: init-mydb
+    image: busybox:1.28
+    command: ['sh', '-c', "until nslookup mydb.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for mydb; sleep 2; done"]

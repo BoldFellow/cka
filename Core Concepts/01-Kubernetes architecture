@@ -1,0 +1,100 @@
+Master Node (Control Plane) Components:
+
+kube-apiserver
+
+Example: When you run "kubectl create deployment nginx --image=nginx", the API server:
+
+Authenticates and authorizes the request
+Validates the deployment manifest
+Persists the deployment object to etcd
+Notifies relevant controllers
+
+
+etcd
+
+Example: After creating a deployment, etcd stores:
+
+The deployment specification
+The current state of the deployment (e.g., number of ready replicas)
+The associated ReplicaSet details
+Information about the pods created
+
+
+kube-scheduler
+
+Example: For a new pod with resource requests of 2 CPU cores and 4GB RAM:
+
+Filters out nodes that don't meet these requirements
+Ranks remaining nodes based on current resource usage
+Selects the best-fit node and binds the pod to it
+
+
+kube-controller-manager
+
+Example: For a Deployment controller:
+
+Continuously compares the desired state (e.g., 3 replicas) with the current state
+If a pod fails, it creates a new one to maintain the desired count
+Updates the deployment status in etcd
+
+
+cloud-controller-manager
+
+Example: When creating a LoadBalancer service in AWS:
+
+Detects the new service creation
+Calls AWS API to create an Elastic Load Balancer
+Updates the service with the ELB's external IP
+
+
+
+Worker Node Components:
+
+kubelet
+
+Example: When a pod is scheduled to a node:
+
+Receives pod specifications from the API server
+Ensures containers described in the pod spec are running and healthy
+Reports the pod's status back to the API server
+
+
+kube-proxy
+
+Example: For a ClusterIP service with 3 pod endpoints:
+
+Creates iptables rules to redirect traffic to these pods
+Implements load balancing by randomly selecting a pod for each connection
+
+
+Container Runtime
+
+Example using Docker:
+
+Receives instructions from kubelet to start a container
+Pulls the specified image from a registry
+Creates and starts the container with given resource limits and environment variables
+
+
+Node Problem Detector
+
+Example: Detecting a disk issue:
+
+Monitors the node's disk usage
+If disk usage exceeds a threshold, it reports a DiskPressure condition
+This information is used by the scheduler to avoid placing new pods on this node
+
+
+cAdvisor
+
+Example: Monitoring a busy application:
+
+Collects CPU, memory, filesystem, and network usage statistics
+Provides this data to the kubelet, which then makes it available via the Metrics API
+This data can be used by Horizontal Pod Autoscaler to scale the application
+
+
+
+All components shortcut names:
+
+https://kubernetes.io/docs/reference/kubectl/#resource-types

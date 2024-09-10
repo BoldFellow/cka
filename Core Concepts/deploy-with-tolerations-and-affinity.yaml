@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deploy
+# namespace: "NS name" ~ create the deploy in a specific NS
+  labels:
+    app: myapp
+    tier: fe
+
+spec: #RS Spec
+  template:
+    metadata:
+      name: test-nginx-pod
+      labels:
+        app: nginx
+        tier: fe
+    spec: # Pod Spec
+      containers:
+      - name: test-nginx-container
+        image: nginx
+      tolerations: # to by pass the node taint
+      - key: "env"
+        operator: "Equal"
+        value: "prod"
+        effect: "NoSchedule"
+      affinity:
+        nodeAffinity: # to bind the pod to specific nodes with matched lables
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: env
+                operator: In
+                values:
+                - prod  
+
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+
+  selector: # Must be included
+    matchLabels:
+      app: nginx
+      tier: fe

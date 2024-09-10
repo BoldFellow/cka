@@ -1,0 +1,68 @@
+
+# Are bound to a specific NS
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: default
+  name: developer
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["list", "create","delete"]
+
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: dev-user-binding
+subjects:
+- kind: User
+  name: dev-user
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: developer
+  apiGroup: rbac.authorization.k8s.io
+
+#--------------Essential commands--------------#
+
+# roles #
+
+# # Create a Role
+# kubectl create role <role-name> --verb=get,list,watch --resource=pods
+
+# # Get Roles
+# kubectl get roles
+
+# # Describe a Role
+# kubectl describe role <role-name> 
+
+# # Delete a Role
+# kubectl delete role <role-name> 
+
+# # Edit a Role
+# kubectl edit role <role-name> 
+
+# Create a definition file
+# kubectl create role <role-name> --verb=get,list,watch --resource=pods -o yaml --dry-run=client
+
+# rolebinding #
+
+# # Create a RoleBinding
+# kubectl create rolebinding <binding-name> --role=<role-name> --user=<user-name> --namespace=acme
+
+# # Get RoleBindings
+# kubectl get rolebindings
+
+# # Describe a RoleBinding
+# kubectl describe rolebinding <binding-name>
+
+# # Delete a RoleBinding
+# kubectl delete rolebinding <binding-name>
+
+# # Edit a RoleBinding
+# kubectl edit rolebinding <binding-name>
+
+# Create a definition file
+# kubectl create rolebinding <binding-name> --clusterrole=admin --user=bob -o yaml --dry-run=client

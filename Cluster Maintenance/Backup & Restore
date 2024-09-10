@@ -1,0 +1,94 @@
+Kubernetes Documentatoin
+
+https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/#backing-up-an-etcd-cluster
+
+# Backing up an etcd cluster
+
+All Kubernetes objects are stored in etcd. Periodically backing up the etcd cluster data is important to recover Kubernetes clusters under disaster scenarios, such as losing all control plane nodes. The snapshot file contains all the Kubernetes state and critical information. In order to keep the sensitive Kubernetes data safe, encrypt the snapshot files.
+
+<!-- #--------------Backing up--------------# -->
+
+ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \
+  --cacert=<trusted-ca-file> \
+  --cert=<cert-file> \
+  --key=<key-file> \
+  snapshot save <backup-file-location>
+
+# trusted-ca-file, cert-file and key-file can be obtained from the description of the etcd Pod.
+
+
+<!-- #--------------Restoring--------------# -->
+
+etcdutl --data-dir <data-dir-location> snapshot restore <snapshot.db-location>
+
+# <data-dir-location> is a directory that will be created during the restore process.
+
+<!-- #--------------Updating the etcd manifast--------------# -->
+
+# Update the etcd manifest file
+
+/etc/kubernetes/manifests/etcd.yaml
+
+# to include the <data-dir-location> with in it's volumes:
+
+ volumes:
+  - hostPath:
+      path: <data-dir-location>
+      type: DirectoryOrCreate
+    name: etcd-data
+
+
+
+<!-- #--------------Essential commands--------------# -->
+
+# To view the clusters
+
+kubectl config view <or> kubectl config get-clusters
+
+# Switch between Clusters
+
+kubectl config use-context <cluster-name>
+
+# Find out if an <External-ETCD> is present on the cluster
+
+ps -ef | grep etcd 
+
+# Move data from one cluster to another
+
+scp cluster1-controlplane:/opt/cluster1.db /opt/cluster1.db
+
+<!-- #--------------External ETCD--------------# -->
+
+# Move the backup file to the ETCD server
+
+# SSH into the External ERCD
+
+# Restore via ectdctl 
+
+# Check & update permissions to the new <data-dir-location>
+
+ls -ld <data-dir-location>
+
+chown -R etcd:etcd <data-dir-location>
+
+# Edit the <--data-dir> in etcd file to like the new path to the backup path
+
+vi /etc/systemd/system/etcd.service
+
+# Reload the deamon
+
+systemctl deamon-reload
+
+# Restard ETCD
+
+systemctl restart etcd
+
+# Restart the managment pods within the cluster
+
+kubectl delete po <control-manager> <scheduler>
+
+# SSH into the control-plane node
+
+# Restart the kubelet
+
+systemctl restart kubelet

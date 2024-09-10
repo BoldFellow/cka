@@ -1,0 +1,143 @@
+<Resource Requests>
+
+- Define the <minimum> amount of resources a container needs.
+- Used by the Kubernetes scheduler to decide which node to place the pod on.
+- If a node doesn't have enough resources to meet the request, the pod won't be scheduled there.
+- Best practice to set <requests> with <no-limits>
+
+
+
+<Resource Limits>
+
+- Define the <maximum> amount of resources a container can use.
+- Enforced by the kubelet on each node.
+- If a container exceeds its memory limit, it may be terminated (OOM killed).
+- If a container exceeds its CPU limit, it will be throttled.
+- Best practice to set <requests> with <no-limits>
+
+<spec:
+  containers:
+  - name: app
+    image: nginx
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+
+
+<Resource Ranges>
+
+          CPU Ranges:
+
+Theoretical Limits:
+
+Minimum: 1m (0.001) CPU
+Maximum: No hard upper limit, but practically limited by the node's capacity
+
+
+Practical Ranges:
+
+Requests: 10m to 4 cores (4000m) for most applications
+Limits: 10m to 8 cores (8000m) for most applications
+
+
+Common Values:
+
+100m: Good for small, non-critical applications
+250m - 500m: Typical for moderate workloads
+1000m (1 core): For CPU-intensive applications
+
+
+
+          Memory Ranges:
+
+Theoretical Limits:
+
+Minimum: 1 byte (though impractical)
+Maximum: Limited by the maximum memory addressable by the system architecture
+
+
+Practical Ranges:
+
+Requests: 32Mi to 64Gi for most applications
+Limits: 64Mi to 128Gi for most applications
+
+
+Common Values:
+
+128Mi - 256Mi: Good for small applications
+512Mi - 1Gi: Typical for moderate workloads
+2Gi - 8Gi: For memory-intensive applications
+
+
+
+
+<LimitRange> # per NS
+
+A LimitRange is a policy to constrain the resource allocations (limits and requests) that you can specify for each applicable object kind (such as Pod or PersistentVolumeClaim) in a namespace.
+
+A LimitRange provides constraints that can:
+
+- Enforce minimum and maximum compute resources usage per Pod or Container in a namespace.
+- Enforce minimum and maximum storage request per PersistentVolumeClaim in a namespace.
+- Enforce a ratio between request and limit for a resource in a namespace.
+- Set default request/limit for compute resources in a namespace and automatically inject them to Containers at runtime.
+- can have multiple types in one file. 
+
+          Types within LimitRange
+
+<Container> This applies to individual containers within pods.
+<Pod> This type applies to the sum of all containers in a pod.
+<PersistentVolumeClaim> This type is used to limit the size of persistent volume claims.
+
+<apiVersion: v1
+kind: LimitRange
+metadata:
+  name: multi-type-limits
+spec:
+  limits:
+  - type: Container
+    default: # this section defines default limits
+      cpu: 500m
+      memory: 512Mi
+    defaultRequest: # this section defines default requests
+      cpu: 200m
+      memory: 256Mi
+    max:
+      cpu: 1
+      memory: 1Gi
+  - type: Pod
+    max: # max and min define the limit range
+      cpu: 2
+      memory: 2Gi
+  - type: PersistentVolumeClaim
+    max:
+      storage: 5Gi
+
+<Reource Quotas> # per NS for all resources unlike LimitRange that is for a specific type of resource.
+
+ResourceQuota provides constraints that limit aggregate resource consumption per namespace. It can limit the quantity of objects that can be created in a namespace by type, as well as the total amount of compute resources that may be consumed by resources in that namespace.
+
+<apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: compute-resources
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "8"
+    limits.memory: 16Gi
+    requests.nvidia.com/gpu: 4
+    pods: "20"
+    services: "15"
+    replicationcontrollers: "20"
+    secrets: "30"
+    configmaps: "30"
+    persistentvolumeclaims: "20"
+    services.loadbalancers: "2"
+    services.nodeports: "10"
+    ephemeral-storage: 100Gi

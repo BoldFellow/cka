@@ -1,0 +1,21 @@
+#--------------NameSpaces = ns--------------#
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test 
+
+
+#--------------Essential commands--------------#
+
+# kubectl create namespace <name>
+# kubectl get namespaces
+# kubectl describe namespace <name>
+# kubectl delete namespace <name>
+# kubectl config set-context --current --namespace=<name>
+
+# to list all components in all NSs
+# kubectl get all --all-namespaces or -A 
+
+# create a resource in a specific NS
+# kubectl apply -f <file name> -n=<NS name> 

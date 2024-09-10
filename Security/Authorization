@@ -1,0 +1,180 @@
+# Authorization mechanism in Kubernetes
+
+# --------------Node Authorization-------------#
+
+Node authorization is a specialized mode designed specifically for kubelet requests. It's part of the Node Authorizer, which authorizes API requests made by kubelets.
+Key points:
+
+- It allows kubelets to read services, endpoints, nodes, and pods.
+- It allows node status updates from the kubelet.
+- It permits pod-specific operations by the kubelet.
+
+<Example configuration in kube-apiserver:
+--authorization-mode=Node,RBAC
+The Node authorizer will handle kubelet requests, while other requests fall through to RBAC.
+
+
+
+# --------------ABAC = Attribute-Based Access Control-------------#
+
+ABAC uses policies that combine attributes to grant access rights. While powerful, it's complex and not commonly used in Kubernetes.
+
+Key Concepts:
+
+- Policies: ABAC uses policy files to define access rules.
+- Attributes: These can include user properties, resource properties, and environment conditions.
+
+apiVersion: abac.authorization.kubernetes.io/v1beta1
+kind: Policy
+spec:
+  user: "alice"
+  namespace: "*"
+  resource: "pods"
+  apiGroup: "*"
+  readonly: true
+
+This policy allows user "alice" read-only access to pods in all namespaces.
+
+<To use ABAC:
+Write policies in a file
+Start the API server with --authorization-mode=ABAC and --authorization-policy-file=path/to/policy/file
+
+
+<Pros of ABAC:
+
+- Highly flexible and expressive
+- Can handle complex scenarios with many variables
+
+<Cons of ABAC:
+
+- Difficult to manage at scale
+- Requires API server restart to update policies
+- No native way to view current policies
+
+# --------------RBAC = Role-Based Access Control-------------#
+
+RBAC is the most commonly used authorization mechanism in Kubernetes. It uses roles and bindings to define and assign permissions.
+Key Concepts:
+
+- Rules: Define what actions can be performed on which resources.
+- Roles and ClusterRoles: Collections of rules.
+- RoleBindings and ClusterRoleBindings: Assign roles to users, groups, or service accounts.
+
+<Pros of RBAC:
+
+- Fine-grained access control
+- Easier to manage and audit than ABAC
+- Can be updated dynamically without restarting the API server
+- Native Kubernetes resources (can be managed with kubectl)
+
+<Cons of RBAC:
+
+- Can become complex in large environments with many roles and bindings
+- Doesn't handle dynamic conditions as flexibly as ABAC
+
+# --------------Role + RoleBinding--------------#
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: default
+  name: developer
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["list", "create","delete"]
+
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: dev-user-binding
+subjects:
+- kind: User
+  name: dev-user
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: developer
+  apiGroup: rbac.authorization.k8s.io
+
+
+# --------------ClusterRole + ClusterRoleBinding--------------#
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: node-admin
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "watch", "list", "create", "delete"]
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: michelle-binding
+subjects:
+- kind: User
+  name: michelle
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: node-admin
+  apiGroup: rbac.authorization.k8s.io
+
+
+# --------------Webhook--------------#
+  Webhook mode allows for external, HTTP-based authorization, giving you the flexibility to implement custom authorization logic outside of Kubernetes.
+Key Concepts:
+
+- External Service: An HTTP(S) server that makes authorization decisions.
+- SubjectAccessReview: The object sent to the webhook for authorization decisions.
+- Webhook Configuration: Tells the Kubernetes API server how to communicate with the external service.
+
+Detailed Breakdown:
+
+<Webhook Configuration
+
+The webhook configuration is defined in a kubeconfig file. Here's a more detailed example:
+apiVersion: v1
+kind: Config
+clusters:
+- name: webhook-auth-server
+  cluster:
+    certificate-authority: /path/to/webhook/ca.pem
+    server: https://webhook.example.com/authorize
+users:
+- name: apiserver
+  user:
+    client-certificate: /path/to/apiserver-client-cert.pem
+    client-key: /path/to/apiserver-client-key.pem
+current-context: webhook
+contexts:
+- context:
+    cluster: webhook-auth-server
+    user: apiserver
+  name: webhook
+This configuration specifies:
+
+The URL of the webhook server
+The CA certificate to verify the webhook server's TLS certificate
+Client certificate and key for the API server to authenticate to the webhook server
+
+
+<API Server Configuration
+
+To enable webhook authorization, you need to configure the API server:
+--authorization-mode=Node,RBAC,Webhook
+--authorization-webhook-config-file=/path/to/webhook/config
+--authorization-webhook-cache-authorized-ttl=5m
+--authorization-webhook-cache-unauthorized-ttl=30s
+These flags:
+
+Enable multiple authorization modes (Node, RBAC, and Webhook)
+Specify the path to the webhook configuration file
+Set cache TTLs for authorized and unauthorized decisions
+
+
+# --------------Service Account = SA --------------#

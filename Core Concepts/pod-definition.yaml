@@ -1,0 +1,38 @@
+#--------------Pods = po--------------#
+
+# Pods are the smallest deployable units in Kubernetes.
+# They can contain one or more containers that share the same network namespace, IP address, and storage volumes.
+# Key features:
+# Containers in a pod are always scheduled on the same node
+# They share the same lifecycle
+# Ideal for tightly coupled applications
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-nginx-pod
+  labels:
+    app: nginx
+    tier: fe
+spec:
+  containers:
+  - name: test-nginx-container
+    image: nginx
+# nodeName: <node name> ~ this allows manual scheduling to a specific node
+
+
+#--------------Essential commands--------------#
+
+# kubectl get pods
+# kubectl describe pod <pod-name>
+# kubectl logs <pod-name>
+# kubectl exec -it <pod-name> -- /bin/bash
+# kubectl delete pod <pod-name>
+
+#--------------Advanced commands--------------#
+
+# kubectl delete pods --selector="key"="value" ~ deletes all the pods associated with that selector
+
+# kubectl run <pod-name> --image=<image-name> -l "key1=value1,key2=value2" ~ create a pod with labels
+
+# kubectl run <pod-name> --image=<image-name> --expose=true ~ # create a pod and a service of type ClusterIp in one command

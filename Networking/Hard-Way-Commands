@@ -1,0 +1,191 @@
+# Low-Level Networking Commands in Kubernetes
+
+1. ip addr
+The ip addr command is used to display and manipulate network interface addresses.
+Common options:
+
+show: Display information for all addresses
+add: Add an address to an interface
+del: Remove an address from an interface
+flush: Remove all addresses from an interface
+
+Examples:
+
+Show all addresses:
+ip addr show
+
+Add an IP address to an interface:
+ip addr add 192.168.1.10/24 dev eth0
+
+Remove an IP address from an interface:
+ip addr del 192.168.1.10/24 dev eth0
+
+
+Kubernetes context:
+In Kubernetes, you might use ip addr to inspect the IP addresses assigned to Pods or to troubleshoot networking issues.
+
+2. ip link
+The ip link command is used to display and modify network interfaces.
+Common options:
+
+show: Display information about network interfaces
+set: Change the state of an interface
+add: Add a virtual interface
+del: Remove a virtual interface
+
+Examples:
+
+Show all network interfaces:
+ip link show
+
+Bring an interface up:
+ip link set eth0 up
+
+Create a veth pair:
+ip link add veth0 type veth peer name veth1
+
+
+Kubernetes context:
+In Kubernetes, ip link is crucial for setting up Pod networking. CNI plugins use it to create and configure virtual interfaces for Pods.
+
+3. ip route
+The ip route command is used to display and manipulate the IP routing table.
+Common options:
+
+show: Display the routing table
+add: Add a new route
+del: Delete a route
+get: Get a single route
+
+Examples:
+
+Show the routing table:
+ip route show
+
+Add a new route:
+ip route add 10.0.0.0/24 via 192.168.1.1
+
+Delete a route:
+ip route del 10.0.0.0/24
+
+
+Kubernetes context:
+In Kubernetes, ip route is used to set up routing between Pods across different nodes.
+
+4. iptables
+The iptables command is used to set up, maintain, and inspect the tables of IP packet filter rules in the Linux kernel.
+Common options:
+
+-L: List the rules in a chain or all chains
+-A: Append a rule to a chain
+-D: Delete a rule from a chain
+-I: Insert a rule at a specified position in a chain
+-F: Flush all rules from a chain
+
+Examples:
+
+List all rules:
+iptables -L
+
+Add a rule to allow incoming traffic on port 80:
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+
+Delete a rule:
+iptables -D INPUT 1
+
+
+Kubernetes context:
+In Kubernetes, iptables is extensively used by kube-proxy in iptables mode to implement Services and load balancing.
+
+5. bridge
+The bridge command is used to configure network bridges.
+Common options:
+
+link: Show information about bridge ports
+fdb: Show or manipulate the forwarding database
+vlan: Show or manipulate VLAN filter entries
+
+Examples:
+
+Show bridge information:
+bridge link show
+
+Add a VLAN filter:
+bridge vlan add vid 100 dev eth0
+
+
+Kubernetes context:
+Bridges are often used in Kubernetes networking to connect Pods on the same node.
+
+6. nsenter
+The nsenter command is used to enter namespaces.
+Common options:
+
+-t: Target process
+-n: Enter network namespace
+-m: Enter mount namespace
+-u: Enter UTS namespace
+
+Example:
+Enter the network namespace of a process:
+nsenter -t <PID> -n
+Kubernetes context:
+nsenter is useful for troubleshooting Pod networking issues by entering a Pod's network namespace.
+
+7. tcpdump
+tcpdump is a powerful command-line packet analyzer.
+Common options:
+
+-i: Specify the interface
+-n: Don't convert addresses to names
+-v: Verbose output
+
+Example:
+Capture packets on interface eth0:
+tcpdump -i eth0
+Kubernetes context:
+tcpdump is invaluable for debugging network issues in Kubernetes clusters.
+
+8. netstat
+netstat is used to display network connections, routing tables, interface statistics, masquerade connections, and multicast memberships.
+Common options:
+
+-t: Show TCP connections
+-u: Show UDP connections
+-l: Show only listening sockets
+-n: Don't resolve names
+
+Example:
+Show all listening TCP ports:
+netstat -tln
+Kubernetes context:
+netstat can be used to inspect network connections in Pods or nodes.
+
+9. ss
+ss is another utility to investigate sockets, similar to netstat but more powerful.
+Common options:
+
+-t: Show TCP sockets
+-u: Show UDP sockets
+-l: Show only listening sockets
+-n: Don't resolve service names
+
+Example:
+Show all listening TCP sockets:
+ss -tln
+Kubernetes context:
+Like netstat, ss is useful for inspecting network connections in Kubernetes environments.
+
+10. ethtool
+ethtool is used to query or control network driver and hardware settings.
+Common options:
+
+-i: Show driver information
+-S: Show NIC- and driver-specific statistics
+
+Example:
+Show driver information for eth0:
+ethtool -i eth0
+Kubernetes context:
+ethtool can be useful for troubleshooting network performance issues in Kubernetes clusters.
+These low-level networking commands are essential for understanding and troubleshooting Kubernetes networking. They allow you to inspect and manipulate the underlying network configuration that Kubernetes builds upon.

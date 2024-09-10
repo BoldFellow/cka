@@ -1,0 +1,8 @@
+
+# Auth to EKS
+aws eks update-kubeconfig --name kube-lab --region us-east-1
+
+
+All components shortcut names:
+
+https://kubernetes.io/docs/reference/kubectl/#resource-types

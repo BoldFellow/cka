@@ -1,0 +1,74 @@
+<Overview:
+
+OS upgrades in Kubernetes typically refer to updating the underlying operating system on the nodes (both worker and control plane nodes) in your cluster.
+
+<Why Perform OS Upgrades?
+
+- Security patches and vulnerability fixes
+- Performance improvements
+- New features and compatibility with newer software versions
+- Compliance requirements
+
+<Challenges:
+
+- Maintaining cluster availability during upgrades
+- Ensuring compatibility with existing workloads
+- Coordinating upgrades across a potentially large number of nodes
+
+
+<Strategies for OS Upgrades:
+
+<a. Rolling Upgrade:
+
+Upgrade nodes one at a time
+Drain workloads from the node being upgraded
+Upgrade the OS
+Bring the node back into the cluster
+Move to the next node
+
+<b. Blue-Green Upgrade:
+
+Create a new set of nodes with the upgraded OS
+Gradually move workloads to the new nodes
+Once all workloads are moved, decommission old nodes
+
+<c. Surge Upgrade:
+
+Add new nodes with the upgraded OS to the cluster
+Gradually move workloads to new nodes
+Remove old nodes as they become empty
+
+<Use node labels to track OS versions
+
+kubectl label nodes <node-name> os-version=ubuntu-20.04
+
+#--------------Essential commands--------------#
+
+kubectl cordon <node-name>
+
+This command marks the node as <unschedulable>. New pods won't be scheduled on this node, but <existing pods continue to run>. It's typically used before maintenance to prevent new workloads from being added to the node.
+
+kubectl drain <node-name> --ignore-daemonsets
+
+This command <evicts all pods from the node (except DaemonSets) and marks it as unschedulable>. It's used to safely remove a node from service. The --ignore-daemonsets flag is used because DaemonSets are typically needed on all nodes and will be recreated immediately if evicted.
+
+kubectl uncordon <node-name>
+
+This command <marks the node as schedulable again>. It's used after maintenance is complete to allow new pods to be scheduled on the node.
+
+#--------------Step-by-Step Process for a Rolling Upgrade--------------#
+
+a. Prepare the cluster:
+kubectl drain <node-name> --ignore-daemonsets
+
+b. Perform the OS upgrade on the drained node
+
+c. Reboot the node if necessary
+
+d. Uncordon the node:
+kubectl uncordon <node-name>
+
+e. Verify node status:
+kubectl get nodes
+
+f. Repeat for all nodes

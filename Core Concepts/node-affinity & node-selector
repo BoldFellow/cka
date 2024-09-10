@@ -1,0 +1,61 @@
+Node selectors and node affinity are mechanisms in Kubernetes that allow you to control which nodes your pods are scheduled on.
+
+<Node Selectors:>
+
+Node selectors are the simplest form of node selection constraint in Kubernetes. They allow you to specify that a pod can only be scheduled on nodes that have a particular label.
+
+To add a label to a node:
+kubectl label nodes <node-name> <key>=<value>
+
+To view the labels on a node:
+kubectl get nodes --show-labels
+
+To remove a label from a node:
+kubectl label nodes <node-name> <key>-
+
+nodeSelector in <spec>
+<spec:
+  containers:
+  - name: nginx
+    image: nginx
+  nodeSelector:
+    <key>: <value>
+
+------------------------------------------------------------------------------------------------------------------------
+
+<Node Affinity>
+
+Node affinity is a more flexible and expressive way to constrain which nodes your pods are scheduled on. It allows you to define rules that are similar to node selectors but with additional capabilities, including soft constraints (preferred scheduling) and multiple key-value pairs.
+
+<Types of Node Affinity>
+
+<RequiredDuringSchedulingIgnoredDuringExecution:> This type of affinity works like a node selector; the pod will only be scheduled on nodes that meet the criteria. If no nodes meet the criteria, the pod will not be scheduled.
+
+<PreferredDuringSchedulingIgnoredDuringExecution:> This type of affinity specifies a preference, but not a requirement. Kubernetes will try to schedule the pod on a node that matches the criteria, but if none are available, the pod may be scheduled on another node.
+
+<Operators:>
+
+<In>: The node must have a label with a key that matches one of the values in the list.
+<NotIn>: The node must not have a label with a key that matches any of the values in the list.
+<Exists>: The node must have a label with the specified key, regardless of its value.
+<DoesNotExist>: The node must not have a label with the specified key.
+
+<Match Expressions:>
+
+These are the building blocks of node affinity and allow you to specify multiple conditions that a node must satisfy for a pod to be scheduled on it.
+
+affinity in <spec>
+
+<spec:
+  containers:
+  - name: nginx
+    image: nginx
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: key-name
+            operator: operator-type
+            values:
+            - value-name

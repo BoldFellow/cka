@@ -1,0 +1,118 @@
+# Storage Classes (SC)
+
+Storage Classes provide a way to describe the "classes" of storage offered by the cluster. They are used for dynamic provisioning of PVs.
+
+<Characteristics:
+
+- Cluster-scoped resources
+- Define parameters for dynamic provisioning
+- Can set a default storage class for the cluster
+
+<Important-Fields:
+
+<provisioner>: Determines which volume plugin to use for provisioning
+<parameters>: Specific to the provisioner, define the type of volumes to be created
+<reclaimPolicy>: Defines the default reclaim policy for dynamically provisioned PVs
+<volumeBindingMode>: Controls when volume binding and dynamic provisioning occur
+
+
+---
+# 1. Basic Storage Class for cloud provider (e.g., AWS)
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: standard
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp2
+
+<!-- Standard storage class for AWS EBS volumes.
+Uses gp2 (General Purpose SSD) type. -->
+
+---
+# 2. Storage Class for SSD on cloud provider (e.g., GCP)
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: fast-ssd
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-ssd
+
+<!-- Defines a storage class for SSD volumes on GCP.
+Useful for applications requiring higher IOPS. -->
+
+---
+# 3. Storage Class with delayed binding
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: delayed-binding
+provisioner: kubernetes.io/aws-ebs
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  type: gp2
+
+<!-- Uses WaitForFirstConsumer volume binding mode.
+Delays volume creation until a pod using the PVC is created, allowing for better placement decisions. -->
+
+---
+# 4. Storage Class with specific reclaim policy
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: retain-storage
+provisioner: kubernetes.io/aws-ebs
+reclaimPolicy: Retain
+parameters:
+  type: gp2
+
+<!-- Sets the reclaim policy to Retain. can also be delete & recycle.
+When a PVC is deleted, the PV will not be automatically deleted, allowing for data recovery if needed. -->
+
+---
+# 5. Storage Class for NFS (using external provisioner)
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs
+provisioner: example.com/nfs
+parameters:
+  server: nfs-server.default.svc.cluster.local
+  path: "/shared"
+
+<!-- Example of a storage class using an external NFS provisioner.
+Useful for on-premises setups or when you need shared ReadWriteMany access. -->
+
+---
+# 6. Storage Class with allowed topologies (e.g., Azure)
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: azurefile-csi
+provisioner: file.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+allowedTopologies:
+- matchLabelExpressions:
+  - key: topology.kubernetes.io/zone
+    values:
+    - westus2-1
+    - westus2-2
+
+<!-- Specifies allowed zones for Azure File storage.
+Helps in controlling where volumes are provisioned, which can be important for data locality or compliance reasons. -->
+
+---
+# 7. Storage Class allowing volume expansion
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: expandable-storage
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp2
+allowVolumeExpansion: true
+
+<!-- Enables the ability to expand volumes after creation.
+Useful when you anticipate needing to increase volume sizes in the future. -->

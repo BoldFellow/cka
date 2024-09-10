@@ -1,0 +1,27 @@
+# Exposes the service on each Node's IP at a static port. 
+# A ClusterIP service is automatically created, and the NodePort service will route to it.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-nodeport-service
+spec:
+  type: NodePort
+  ports:
+    - port: 80 # Service port
+      targetPort: 80 # Pod port
+      nodePort: 30008 # in range of 30000-32767
+  selector:
+     app: nginx
+     tier: fe
+
+ #--------------Essential commands--------------# 
+
+# kubectl create svc nodeport <service name> --tcp=80:8080
+# kubectl get svc <service name>
+# kubectl describe svc <service name>
+# kubectl delete svc <service name>
+# kubectl get nodes -o wide  ~ To get node IPs
+
+# to create a definition file quickly for a SVC
+# kubectl expose pod "pod name" --type=NodePort --port=80 --name="svc-service" --dry-run=client -o yaml > "file name".yaml

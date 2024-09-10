@@ -1,0 +1,57 @@
+#--------------Deployment = deploy--------------#
+
+# Deployments provide declarative updates for Pods and ReplicaSets. 
+# They manage the desired state of your application, handling rolling updates and rollbacks.
+# Key features:
+# Ensures a specified number of pod replicas are running
+# Supports rolling updates and rollbacks
+# Uses a ReplicaSet under the hood.
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deploy
+# namespace: "NS name" ~ create the deploy in a specific NS
+  labels:
+    app: myapp
+    tier: fe
+
+spec: #RS Spec
+  template:
+    metadata:
+      name: test-nginx-pod
+      labels:
+        app: nginx
+        tier: fe
+    spec: # Pod Spec
+      containers:
+      - name: test-nginx-container
+        image: nginx
+
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+
+  selector: # Must be included
+    matchLabels:
+      app: nginx
+      tier: fe
+
+
+#--------------Essential commands--------------#
+
+# kubectl create deployment <name> --image=<image>
+# kubectl get deployments
+# kubectl describe deployment <name>
+# kubectl scale deployment <name> --replicas=<number>
+# kubectl rollout status deployment/<name>
+# kubectl rollout undo deployment/<name>
+
+#--------------Advanced commands--------------#
+
+# to create a definition file for deploy
+# kubectl create deploy <deploy name> --image=<image> --replicas=<number> --dry-run-client -o yaml > <file name>.yaml 

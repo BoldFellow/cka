@@ -1,0 +1,73 @@
+<Static pods>
+
+Are a special type of pod managed directly by the kubelet on a node, rather than by the Kubernetes control plane (i.e., the API server and controller manager). Static pods are defined in individual configuration files on each node, and the kubelet is responsible for creating and maintaining these pods. Static pods are useful in scenarios where you need to ensure certain critical services are always running on specific nodes, regardless of the state of the Kubernetes control plane.
+
+<Key Characteristics of Static Pods:>
+
+- Node-Specific: Each static pod is tied to a specific node and runs only on that node.
+- No API Server Involvement: The Kubernetes API server is not involved in managing static pods, meaning they do not appear in the API server's list of managed pods.
+- Self-Managed by Kubelet: The kubelet automatically creates, restarts, and monitors static pods based on configuration files present on the node.
+- PodManifest Path: Static pods are defined using manifest files located in a specific directory on the node, typically </etc/kubernetes/manifests/> or </etc/kubelet.d/>.
+- Pod Lifecycle: If a static pod’s manifest file is updated, the kubelet automatically recreates the pod with the new configuration. If the manifest file is deleted, the pod is also deleted.
+- Mirror Pods: To provide visibility into static pods, the kubelet creates corresponding mirror pods in the API server. These mirror pods appear like regular pods when you query the API server, but they cannot be controlled through typical Kubernetes commands like kubectl delete.
+
+<Use Cases for Static Pods>
+
+- Critical System Components: Static pods are often used to ensure critical components (like kube-apiserver, etcd, kube-scheduler, and kube-controller-manager) run on master nodes in self-hosted Kubernetes clusters.
+- Single-Node Clusters: In single-node clusters or edge computing environments, static pods ensure essential services are always running, even if the control plane is down.
+- Bootstrapping Kubernetes: Static pods can be used to bootstrap a Kubernetes cluster, particularly for running essential control plane components before the rest of the cluster is set up.
+
+Creating a Static Pod
+To create a static pod, follow these steps:
+
+<Create the Pod Manifest File>
+
+Write a YAML file that defines the static pod. This file should be placed in the directory where the kubelet looks for static pod definitions (typically </etc/kubernetes/manifests/>).
+Example of a static pod manifest (</etc/kubernetes/manifests/nginx-static-pod.yaml>):
+
+
+<apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-static-pod
+  labels:
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    ports:
+    - containerPort: 80
+
+Place the YAML file in the kubelet’s static pod directory, such as /etc/kubernetes/manifests/.
+<sudo cp nginx-static-pod.yaml /etc/kubernetes/manifests/
+Kubelet Creates the Pod:
+
+The kubelet continuously monitors the /etc/kubernetes/manifests/ directory. When the nginx-static-pod.yaml file is placed there, the kubelet reads it and creates the nginx-static-pod on the node.
+
+<Check the Static Pod:>
+
+You can check the status of the static pod by listing the pods on the node:
+<kubectl get pods -o wide --all-namespaces>
+Look for the pod with the name you specified (nginx-static-pod).
+
+<Managing Static Pods>
+
+Static pods are managed differently compared to regular pods because they are not directly controlled by the Kubernetes API. Instead, they are managed by the kubelet.
+
+<Updating a Static Pod:
+
+To update a static pod, <modify the manifest file in </etc/kubernetes/manifests/>. The kubelet will automatically detect the change and recreate the pod with the updated configuration.
+
+<Deleting a Static Pod:
+
+To delete a static pod, remove the manifest file from the directory. The kubelet will then terminate and delete the pod.
+<sudo rm /etc/kubernetes/manifests/nginx-static-pod.yaml
+
+Checking Logs and Status:
+
+You can view the logs of a static pod just like any other pod:
+<kubectl logs nginx-static-pod -n kube-system
+
+To describe the pod, use:
+<kubectl describe pod nginx-static-pod -n kube-system

@@ -1,0 +1,60 @@
+#--------------CertificateSigningRequest = csr--------------#
+
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: <name>
+spec:
+  groups:
+  - system:authenticated
+  request: <Paste the base64 encoded value of the CSR file>
+  signerName: kubernetes.io/kube-apiserver-client
+  usages:
+  - client auth
+
+#--------------Essential commands--------------#
+
+# Create the CSR
+
+# Generating a private key:
+# openssl genrsa -out <user>.key 2048
+
+# openssl: The command-line tool for using OpenSSL's cryptography libraries.
+# genrsa: A sub-command of OpenSSL that generates an RSA private key.
+# -out user.key: Specifies the output file where the private key will be saved.
+# 2048: The size of the key in bits. 2048 bits is currently considered secure for most purposes.
+
+# Creating a Certificate Signing Request (CSR):
+# openssl req -new -key <user>.key -out <user>.csr -subj "/CN=<user>/O=<group>"
+
+# openssl: Again, invoking the OpenSSL tool.
+# req: A sub-command for PKCS#10 X.509 Certificate Signing Request (CSR) Management.
+# -new: Indicates that we're creating a new CSR.
+# -key user.key: Specifies the private key file to use (the one we generated in step 1).
+# -out user.csr: Specifies the output file for the CSR.
+# -subj "/CN=user/O=group": Sets the subject of the certificate request. This is a crucial part:
+
+# CN (Common Name): In this case, it's set to "user". For a user certificate, this typically represents the username.
+# O (Organization): Set to "group". In Kubernetes, this is often used to specify the group(s) the user belongs to for RBAC purposes.
+
+# To base64 encode 
+# cat akshay.csr | base64 -w 0 # "-w 0" makes the code as 1 line.
+
+# To list all CSRs
+# kubectl get csr
+
+# To view details of a specific CSR
+# kubectl describe csr <name>
+
+# To delete CSRs
+# kubectl delete csr <name>
+
+# Approve CSRs
+# kubectl certificate approve <name>
+
+# Deny CSRs
+# kubectl certificate deny <name>
+
+# Retrieving the signed certificate
+# kubectl get csr <name> -o jsonpath='{.status.certificate}' | base64 -d > <name>.crt
+

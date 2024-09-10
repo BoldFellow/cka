@@ -1,0 +1,60 @@
+#--------------Network Policies= netpol--------------#
+
+# Network Policies are a crucial aspect of Kubernetes network security. 
+# Allowing you to control the flow of traffic between pods, namespaces, and external networks.
+# They act as a firewall for your Kubernetes cluster, providing fine-grained control over ingress and egress traffic.
+
+# Basic Concepts:
+
+# Network Policies are namespace-scoped resources.
+# By default, if no policies are applied to a pod, all ingress and egress traffic is allowed.
+# Once a Network Policy is applied to a pod, all traffic not explicitly allowed by a policy is denied.
+
+
+# Policy Types:
+
+# Ingress: Controls incoming traffic to pods.
+# Egress: Controls outgoing traffic from pods.
+
+
+# Selectors:
+
+# podSelector: Determines which pods the policy applies to.
+# namespaceSelector: Selects entire namespaces.
+# ipBlock: Selects specific IP CIDR ranges.
+# Combine Selectors: You can use multiple selector types (pod, namespace, IP) in a single rule for complex scenarios.
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: comprehensive-network-policy
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      role: db
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: 172.17.0.0/16
+            except:
+              - 172.17.1.0/24
+          namespaceSelector: #  NS and ipBlock are as one rule and both statements much match, like an "AND"
+            matchLabels:
+              project: myproject
+        - podSelector: # either pod or ip&ns rules will allow trafic, like an "OR"
+            matchLabels:
+              role: frontend
+      ports:
+        - protocol: TCP
+          port: 6379
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 10.0.0.0/24
+      ports:
+        - protocol: TCP
+          port: 5978

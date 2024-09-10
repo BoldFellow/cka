@@ -1,0 +1,32 @@
+# Exposes the service on an internal IP within the cluster. 
+# This type makes the service only reachable from within the cluster.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-clusterip-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80 # Service port
+      targetPort: 80 # BackEnd/Pods port
+  selector:
+     app: nginx
+     tier: fe
+
+#--------------Essential commands--------------#
+
+# kubectl expose deployment <name> --port=<port> --type=ClusterIP
+# kubectl get services
+# kubectl describe service <name>
+# kubectl delete service <name>
+
+
+# create an SVC of type ClusterIP
+## expose command automatically assumes the pod's lables
+# kubectl expose pod <pod-name> --port=<number> --name=<SVC name>
+
+#--------------Advanced commands--------------#
+
+# to create a definition file quickly for a SVC
+# kubectl expose pod "pod name" --port=6379 --name "svc-service" --dry-run=client -o yaml > "file name".yaml

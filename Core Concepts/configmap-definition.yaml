@@ -1,0 +1,85 @@
+#--------------ConfigMap = cm--------------#
+
+
+# ConfigMaps are API objects used to store non-confidential data in key-value pairs.
+# Pods can consume ConfigMaps as environment variables, command-line arguments, or configuration files in a volume.
+
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-config
+data:
+  APP_COLOR: blue
+  APP_MODE: prod
+
+#--------------Essential commands--------------#
+
+# kubectl create configmap my-config --from-literal=APP_COLOR=blue --from-literal=APP_MODE=prod
+# kubectl get cm
+# kubectl describe cm <name>
+# kubectl delete cm <name>
+
+#--------------How to Impplemnt into definition files--------------#
+
+
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   name: my-pod
+# spec:
+#   containers:
+#   - name: my-container
+#     image: my-image
+#     envFrom:  # Indicates that we're importing environment variables from an external source
+#     - configMapRef:  # Specifies that we're referencing a ConfigMap
+#         name: my-config  # Name of the ConfigMap to import all key-value pairs from
+
+# Pros:
+
+# Simpler and more concise syntax
+# Automatically imports all key-value pairs from the ConfigMap as environment variables
+# Easier to use when you want to import multiple or all values from a ConfigMap
+
+# Cons:
+
+# Less control over which specific variables are imported
+# Potential for namespace pollution if the ConfigMap contains many variables
+# Can't rename variables during import
+
+
+# or
+
+  # spec:
+  #   containers:
+  #   - name: my-container
+  #     image: my-image
+  #     env:
+  #     - name: APP_COLOR  # This is the name of the environment variable as it will appear inside the container, APP_COLOR .
+  #       valueFrom:       # Indicate that the value will be sourced externally
+  #         configMapKeyRef:  # Specify that we're referencing a ConfigMap
+  #           name: webapp-config-map  # Name of the ConfigMap to use
+  #           key: APP_COLOR  # Specific key in the ConfigMap to fetch the value from
+
+
+# Pros:
+
+# More precise control over which variables are imported
+# Ability to rename variables during import
+# Clearer documentation of which environment variables the container is using
+# Can combine variables from different ConfigMaps or other sources (like Secrets)
+
+# Cons:
+
+# More verbose syntax
+# Can become lengthy if many variables are needed
+
+#------------------#
+
+# In general, <envFrom> is often considered easier to use, especially when you want to import all or most of the variables from a ConfigMap. It's a "quick and dirty" way to get all your config into a container.
+# However, <env> with <configMapKeyRef> is more common in production environments and larger projects. This is because:
+
+# It provides better documentation of what the container actually needs.
+# It allows for more fine-grained control over the environment.
+# It's more explicit, which can help prevent errors and make troubleshooting easier.
+

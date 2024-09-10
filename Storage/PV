@@ -1,0 +1,265 @@
+# Persistent Volumes (PV)
+
+Persistent Volumes are <cluster-level> resources that represent a piece of storage in the cluster. They are provisioned by an administrator or dynamically provisioned using Storage Classes.
+
+<Characteristics:
+
+- Cluster-scoped (not namespaced)
+- Have a lifecycle independent of any individual pod
+- Can be provisioned statically or dynamically
+
+<Important-Fields:
+
+<capacity>: Specifies the size of the volume
+<accessModes>: Defines how the volume can be mounted (ReadWriteOnce, ReadOnlyMany, ReadWriteMany)
+<persistentVolumeReclaimPolicy>: Determines what happens to the volume when released (Retain, Delete, Recycle)
+<storageClassName>: Name of the StorageClass for dynamic provisioning
+<mountOptions>: Specific options used when mounting the volume
+
+# AccessModes:
+There are three types of accessModes in Kubernetes:
+
+<ReadWriteOnce (RWO):
+
+- Can be mounted as read-write by a single node.
+- Allows read and write operations, but only from a single node at a time.
+- Most common for block storage like AWS EBS, Azure Disk, GCE PD.
+
+
+<ReadOnlyMany (ROX):
+
+- Can be mounted as read-only by many nodes.
+- Multiple nodes can read from this volume simultaneously.
+- Useful for sharing static data across multiple nodes.
+
+
+<ReadWriteMany (RWX):
+
+- Can be mounted as read-write by many nodes.
+- Allows multiple nodes to read from and write to the volume simultaneously.
+- Typically supported by file storage and distributed storage systems like NFS, Azure File, GlusterFS.
+
+- RWO is the most widely supported and is suitable for most single-instance applications.
+- ROX is useful for deploying the same read-only data across multiple nodes (like configuration files or static assets).
+- RWX is necessary for applications that need to share writable data across multiple nodes, but it's supported by fewer storage types.
+
+
+# VolumeModes:
+There are two types of volumeModes in Kubernetes:
+
+<Filesystem:
+
+This is the default volumeMode.
+The volume is mounted into pods as a directory.
+All data is formatted into a filesystem.
+Suitable for most applications that need to read and write files.
+
+
+<Block:
+
+The volume is presented to pods as a raw block device.
+No filesystem is created on the volume.
+Useful for applications that need to manage storage themselves or require a storage format not supported by Kubernetes.
+Typically used by databases or other applications that manage their own data format.
+
+Filesystem mode is the most common and is suitable for most applications.
+Block mode is used when the application needs direct access to the storage device without a filesystem layer.
+Not all storage providers support Block mode.
+
+
+<!-- PV Definition Examples: -->
+---
+
+<!-- Use case: Single-node applications needing persistent storage on AWS.
+Examples: Databases like MySQL, PostgreSQL. -->
+
+# 1. AWS EBS - ReadWriteOnce, Filesystem
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: aws-ebs-rwo-fs
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: gp2
+  awsElasticBlockStore:
+    volumeID: <volume-id>
+    fsType: ext4
+
+---
+
+<!-- Use case: Applications that manage their own filesystem or require direct block device access.
+Examples: Certain databases or specialized storage applications. -->
+
+# 2. AWS EBS - ReadWriteOnce, Block
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: aws-ebs-rwo-block
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Block
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: gp2
+  awsElasticBlockStore:
+    volumeID: <volume-id>
+---
+
+<!-- Use case: Multi-node applications needing shared storage on AWS.
+Examples: Content Management Systems, shared file storage for microservices. -->
+
+# 3. AWS EFS - ReadWriteMany, Filesystem
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: aws-efs-rwx
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: efs-sc
+  csi:
+    driver: efs.csi.aws.com
+    volumeHandle: <file-system-id>
+---
+
+<!-- Use case: Single-node applications needing persistent storage on Azure.
+Examples: Similar to AWS EBS use cases. -->
+
+# 4. Azure Disk - ReadWriteOnce, Filesystem
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: azure-disk-rwo
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: managed-premium
+  azureDisk:
+    diskName: myAzureDisk
+    diskURI: <disk-uri>
+    kind: Managed
+    fsType: ext4
+---
+
+<!-- Use case: Multi-node applications needing shared storage on Azure.
+Examples: Similar to AWS EFS use cases. -->
+
+# 5. Azure File - ReadWriteMany, Filesystem
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: azure-file-rwx
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: azurefile
+  azureFile:
+    secretName: azure-secret
+    shareName: myshare
+    readOnly: false
+---
+
+<!-- Use case: Single-node applications needing persistent storage on GCP.
+Examples: Similar to AWS EBS and Azure Disk use cases. -->
+
+# 6. Google Persistent Disk - ReadWriteOnce, Filesystem
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: gce-pd-rwo
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  gcePersistentDisk:
+    pdName: my-gce-pd
+    fsType: ext4
+---
+
+<!-- Use case: Multi-node applications needing shared storage, often in on-premises or self-managed environments.
+Examples: Legacy applications, data sharing across multiple services. -->
+
+# 7. NFS - ReadWriteMany, Filesystem (On-premises or self-managed)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-rwx
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs
+  nfs:
+    server: nfs-server.default.svc.cluster.local
+    path: "/path/to/data"
+---
+
+<!-- Use case: Applications needing block storage in on-premises environments.
+Examples: Databases or applications requiring direct block device access in non-cloud environments. -->
+
+# 8. iSCSI - ReadWriteOnce, Block (On-premises)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: iscsi-rwo-block
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Block
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: iscsi
+  iscsi:
+    targetPortal: 10.0.0.1:3260
+    iqn: iqn.2016-04.com.example:storage.target00
+    lun: 0
+    fsType: ext4
+    readOnly: false
+---
+
+<!-- Use case: High-performance storage needs, utilizing node-local storage.
+Examples: Caching, high-IOPS databases, applications with specific node requirements. -->
+
+# 9. Local Volume - ReadWriteOnce, Filesystem
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-storage
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /mnt/disks/vol1
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - worker-node-1

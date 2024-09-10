@@ -1,0 +1,69 @@
+
+# Are Cluster Wide and not bound to a specific NS
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: node-admin
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "watch", "list", "create", "delete"]
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: michelle-binding
+subjects:
+- kind: User
+  name: michelle
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: node-admin
+  apiGroup: rbac.authorization.k8s.io
+
+
+#--------------Essential commands--------------#
+
+# CluserRole #
+
+# # Create a ClusterRole
+# kubectl create clusterrole <role-name> --verb=get,list,watch --resource=pods
+
+# # Get ClusterRoles
+# kubectl get clusterroles
+
+# # Describe a ClusterRole
+# kubectl describe clusterrole <role-name>
+
+# # Delete a ClusterRole
+# kubectl delete clusterrole <role-name>
+
+# # Edit a ClusterRole
+# kubectl edit clusterrole <role-name>
+
+# Generate ClusterRole YAML
+# kubectl create clusterrole <role-name> --verb=get,list,watch --resource=pods -o yaml --dry-run=client
+
+
+# ClusterRoleBinding #
+
+# # Create a ClusterRoleBinding
+# kubectl create clusterrolebinding <binding-name> --clusterrole=<ClusterRole> --user=<UserName>
+
+# # Get ClusterRoleBindings
+# kubectl get clusterrolebindings
+
+# # Describe a ClusterRoleBinding
+# kubectl describe clusterrolebinding <binding-name>
+
+# # Delete a ClusterRoleBinding
+# kubectl delete clusterrolebinding <binding-name>
+
+# # Edit a ClusterRoleBinding
+# kubectl edit clusterrolebinding <binding-name>
+
+# Generate ClusterRoleBinding YAML
+# kubectl create clusterrolebinding <binding-name> --clusterrole=cluster-admin --user=admin -o yaml --dry-run=client

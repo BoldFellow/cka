@@ -1,0 +1,35 @@
+The command and args fields in a Kubernetes pod specification <allow you to override> the default command and arguments defined in the container image's Dockerfile.
+
+<command:> Overrides the <ENTRYPOINT> instruction in the Dockerfile.
+<args:> Overrides the <CMD> instruction in the Dockerfile.
+
+command and args are both arrays of strings.
+- If you provide only command, it will run without arguments.
+- If you provide only args, it will use the default ENTRYPOINT from the image and override the CMD.
+- If you provide both, command overrides ENTRYPOINT and args overrides CMD.
+
+<apiVersion: v1
+kind: Pod
+metadata:
+  name: command-demo
+spec:
+  containers:
+  - name: command-demo-container
+    image: debian
+    command: ["printenv"]
+    args: ["HOSTNAME", "KUBERNETES_PORT"]
+
+
+<apiVersion: v1
+kind: Pod
+metadata:
+  name: env-var-demo
+spec:
+  containers:
+  - name: env-var-demo-container
+    image: debian
+    command: ["/bin/echo"]
+    args: ["$(MESSAGE)"]
+    env:
+    - name: MESSAGE
+      value: "Hello from Kubernetes!"

@@ -1,0 +1,47 @@
+# Differences between pod-level and container-level SecurityContexts, and explore the various types of security settings available at each level.
+
+Pod vs Container <SecurityContexts>:
+
+Scope of Application:
+
+Pod SecurityContext: Applied to all containers within the pod.
+Container SecurityContext: Applied to a specific container and can override pod-level settings.
+
+
+Inheritance:
+
+Container SecurityContexts inherit from Pod SecurityContexts if not explicitly set.
+Container-specific settings take precedence over pod-level settings when both are defined.
+
+
+Available Fields:
+
+Some fields are only available at the pod level, while others can be set at both levels.
+
+<types of security settings:
+
+<Pod-level> SecurityContext:
+a) runAsUser: Sets the user ID for all processes within the Pod's containers.
+b) runAsGroup: Sets the primary group ID for all processes within the Pod's containers.
+c) fsGroup: Controls the group ID of the mounted volumes and any files created in that volume.
+d) supplementalGroups: Additional group IDs applied to all containers.
+e) seLinuxOptions: SELinux labels to apply to the container.
+f) sysctls: Namespaced kernel parameters to set for the Pod.
+
+<Container-level> SecurityContext:
+a) runAsUser: Overrides the Pod-level setting for this specific container.
+b) runAsNonRoot: Ensures the container must run as a non-root user.
+c) allowPrivilegeEscalation: Controls whether a process can gain more privileges than its parent process.
+d) capabilities: Fine-grained control over Linux capabilities.
+e) readOnlyRootFilesystem: Mounts the container's root filesystem as read-only.
+f) privileged: Gives extended privileges on the host.
+g) procMount: Controls how the container's /proc filesystem is mounted.
+h) seccompProfile: Specifies the seccomp profile for syscall restriction.
+
+Key Differences and Considerations:
+
+- Granularity: Container-level settings offer more granular control, allowing you to have different security settings for different containers within the same pod.
+- Overriding: Container settings override pod settings. For example, if you set runAsUser: 1000 at the pod level and runAsUser: 2000 for a specific container, that container will run as user 2000.
+- Unique Container Settings: Some settings like capabilities and allowPrivilegeEscalation are only available at the container level, reflecting their container-specific nature.
+- Volume Permissions: fsGroup and supplementalGroups at the pod level affect volume permissions and are particularly important for shared storage scenarios.
+- Host-level Impact: Settings like sysctls at the pod level can have broader impacts on the host system and should be used cautiously.
